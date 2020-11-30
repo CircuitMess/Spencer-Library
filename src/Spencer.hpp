@@ -11,7 +11,7 @@
 #include "Audio/Recording.h"
 #include <Util/Task.h>
 #include "Settings.h"
-#include "Net.h"
+#include "Net/Net.h"
 
 #ifndef SPENCER_HPP
 #define SPENCER_HPP
