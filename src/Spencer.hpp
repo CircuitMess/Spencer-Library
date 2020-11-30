@@ -27,6 +27,7 @@ public:
 	Spencer();
 	~Spencer();
 	void begin();
+	void startLoopTask();
 };
 
 #endif

@@ -5,6 +5,7 @@ Spencer spencer;
 
 void setup(){
 	spencer.begin();
+	spencer.startLoopTask();
 }
 
 void loop(){

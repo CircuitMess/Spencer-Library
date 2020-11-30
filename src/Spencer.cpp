@@ -44,5 +44,9 @@ void Spencer::begin()
 	Net.set(Settings.get().SSID, Settings.get().pass);
 
 	LoopManager::setStackSize(10240);
+}
+
+void Spencer::startLoopTask()
+{
 	LoopManager::startTask(2, 1);
 }
