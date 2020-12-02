@@ -7,7 +7,7 @@ Spencer is a DIY voice assistant that talks, lights-up, connects to the internet
 Spencer is also a part of [CircuitMess STEM Box](https://igg.me/at/stem-box/x#/) - a series of fun electronic kits to help children and adults understand the basics of technologies everybody's talking about.
 
 
-![](https://circuitmess.com/wp-content/uploads/2020/11/spencer-page-1.jpg =100x)
+![](https://circuitmess.com/wp-content/uploads/2020/11/spencer-page-1.jpg)
 
 ## Installation
 
