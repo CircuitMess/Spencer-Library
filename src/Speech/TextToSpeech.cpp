@@ -15,7 +15,7 @@ const char* stash[] = {
 };
 
 #define STASH_COUNT (sizeof(stash) / sizeof(stash[0]))
-#define CHAR_LIMIT 150
+#define CHAR_LIMIT 130
 
 TextToSpeechImpl TextToSpeech;
 
@@ -30,13 +30,17 @@ void TextToSpeechImpl::releaseRecording(const char* filename){
 }
 
 void TextToSpeechImpl::doJob(const TTSJob& job){
-	if(strlen(job.text) > CHAR_LIMIT){
-		*job.error = TTSError::CHARLIMIT;
+	
+
+	stashMut.lock();
+	if(fileStash.size() == 0){
+		stashMut.unlock();
+		*job.error = TTSError::FILELIMIT;
 		*job.resultFilename = nullptr;
 		*job.size = 0;
 		return;
 	}
-	stashMut.lock();
+
 	const char* filename = *fileStash.begin();
 	fileStash.erase(filename);
 	stashMut.unlock();
@@ -46,7 +50,7 @@ void TextToSpeechImpl::doJob(const TTSJob& job){
 }
 
 TTSError TextToSpeechImpl::generateSpeech(const char* text, uint32_t *size, const char* filename){
-	const char pattern[] = "{ 'input': { 'text': '%s' },"
+	const char pattern[] = "{ 'input': { 'text': '%.*s' },"
 						   "'voice': {"
 						   "'languageCode': 'en-US',"
 						   "'name': 'en-US-Standard-D',"
@@ -58,8 +62,8 @@ TTSError TextToSpeechImpl::generateSpeech(const char* text, uint32_t *size, cons
 						   "'sampleRateHertz': 16000"
 						   "}}";
 
-	char* data = (char*) malloc(sizeof(pattern) + strlen(text) + 2);
-	uint length = sprintf(data, pattern, text);
+	char* data = (char*) malloc(sizeof(pattern) + (strlen(text) > CHAR_LIMIT ? CHAR_LIMIT : strlen(text)) + 2);
+	uint length = sprintf(data, pattern, CHAR_LIMIT, text);
 
 	StreamableHTTPClient http;
 	http.useHTTP10(true);
