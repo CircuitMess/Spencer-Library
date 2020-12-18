@@ -1,6 +1,5 @@
 #include <Loop/LoopManager.h>
 #include "PreparedStatement.h"
-#include "Speech/TextToSpeech.h"
 #include "Audio/AudioFileSourceSerialFlash.h"
 #include "Audio/Playback.h"
 
@@ -20,9 +19,19 @@ void PreparedStatement::addTTS(const char* text){
 }
 
 void PreparedStatement::loop(uint micros){
-	for(const char* filename : files){
-		if(filename == nullptr) return;
+	for(TTSError error : errors){
+		if(error == TTSError::UNDEFINED) return;
+		if(error != TTSError::OK){
+			LoopManager::removeListener(this);
+			Serial.println("error callback");
+			if(playCallback != nullptr){
+				playCallback(error, nullptr);
+			}
+			playCallback = nullptr;
+			LoopManager::removeListener(this);
+		}
 	}
+
 
 	CompositeAudioFileSource* source = new CompositeAudioFileSource();
 	int i = 0;
@@ -30,27 +39,40 @@ void PreparedStatement::loop(uint micros){
 		if(part.type == Part::SAMPLE){
 			source->add(static_cast<AudioFileSource*>(part.content));
 		}else{
-			source->add(new AudioFileSourceSerialFlash(files[i++]));
+			source->add(new AudioFileSourceSerialFlash(files[i], fileSizes[i]));
+			i++;
 		}
 	}
 
 	LoopManager::removeListener(this);
-	Playback.playMP3(source);
 
-	if(playbackStarted){
-		playbackStarted();
+	if(playCallback != nullptr){
+		Serial.println("before callback");
+		playCallback(TTSError::OK, source);
 	}
+	Serial.println("after callback");
 }
 
-void PreparedStatement::play(void (*playbackStarted)()){
-	this->playbackStarted = playbackStarted;
+void PreparedStatement::prepare(void (*playCallback)(TTSError error, CompositeAudioFileSource* source)){
+	this->playCallback = playCallback;
 
 	files.reserve(parts.size());
+	uint8_t temp = 0;
+	for(Part& part : parts){
+		if(part.type == Part::TTS){
+			temp++;
+		}
+	}
+	errors.reserve(temp);
+	fileSizes.reserve(temp);
 
 	for(const Part& part : parts){
 		if(part.type == Part::TTS){
 			files.push_back(nullptr);
-			TextToSpeech.addJob({ static_cast<const char*>(part.content), &files.back() });
+			errors.push_back(TTSError::UNDEFINED);
+			fileSizes.push_back(0);
+			TextToSpeech.addJob({ static_cast<const char*>(part.content), &files.back(), &errors.back(), &fileSizes.back() });
+
 		}
 	}
 

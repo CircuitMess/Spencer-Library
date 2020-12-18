@@ -9,7 +9,7 @@ class AudioFileSourceSerialFlash : public AudioFileSource
 {
 public:
 	AudioFileSourceSerialFlash();
-	AudioFileSourceSerialFlash(const char *filename);
+	AudioFileSourceSerialFlash(const char *filename, uint32_t size = 0U);
 	virtual ~AudioFileSourceSerialFlash() override;
 	
 	virtual bool open(const char *filename) override;
@@ -22,6 +22,7 @@ public:
 
 private:
 	SerialFlashFile f;
+	uint32_t size = 0;
 };
 
 
