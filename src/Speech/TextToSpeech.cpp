@@ -15,6 +15,7 @@ const char* stash[] = {
 };
 
 #define STASH_COUNT (sizeof(stash) / sizeof(stash[0]))
+#define CHAR_LIMIT 150
 
 TextToSpeechImpl TextToSpeech;
 
@@ -29,11 +30,17 @@ void TextToSpeechImpl::releaseRecording(const char* filename){
 }
 
 void TextToSpeechImpl::doJob(const TTSJob& job){
+	if(strlen(job.text) > CHAR_LIMIT){
+		*job.error = TTSError::CHARLIMIT;
+		*job.resultFilename = nullptr;
+		*job.size = 0;
+		return;
+	}
 	stashMut.lock();
 	const char* filename = *fileStash.begin();
 	fileStash.erase(filename);
 	stashMut.unlock();
-	
+
 	*job.error = generateSpeech(job.text, job.size, filename);
 	*job.resultFilename = filename;
 }
