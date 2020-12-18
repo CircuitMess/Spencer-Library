@@ -11,7 +11,13 @@ public:
 	virtual ~PreparedStatement();
 
 	void addSample(AudioFileSource* sample);
-
+	/**
+	 * @brief Adds a text to be downloaded as speech and added to the CompositeAudioFileSource.
+	 *        Limited to 4 samples in a single PreparedStatement!
+	 *
+	 * 
+	 * @param text Text to be converted to speech, downloaded and queued up.
+	 */
 	void addTTS(const char* text);
 
 	/**
