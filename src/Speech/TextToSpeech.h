@@ -6,7 +6,7 @@
 #include "../Util/StreamableHTTPClient.h"
 #include "../AsyncProcessor.hpp"
 
-enum class TTSError { OK = 0, NETWORK, FILE, JSON, KEY, UNDEFINED, CHARLIMIT };
+enum class TTSError { OK = 0, NETWORK, FILE, JSON, KEY, UNDEFINED, FILELIMIT };
 struct TTSJob {
 	const char* text;
 	const char** resultFilename;

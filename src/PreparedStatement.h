@@ -14,11 +14,13 @@ public:
 	/**
 	 * @brief Adds a text to be downloaded as speech and added to the CompositeAudioFileSource.
 	 *        Limited to 4 samples in a single PreparedStatement!
+	 * 		  The character limit in a single TTS request is 130 characters!
 	 *
 	 * 
 	 * @param text Text to be converted to speech, downloaded and queued up.
+	 * @return Boolean, true if text is okay. False if text is longer than 130 characters.
 	 */
-	void addTTS(const char* text);
+	bool addTTS(const char* text);
 
 	/**
 	 * @brief Does the TTS downloading and combining into a single audio file. Executes callback when done or when error occurs.
