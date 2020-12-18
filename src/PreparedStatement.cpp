@@ -32,7 +32,6 @@ void PreparedStatement::loop(uint micros){
 		if(error == TTSError::UNDEFINED) return;
 		if(error != TTSError::OK){
 			LoopManager::removeListener(this);
-			Serial.println("error callback");
 			if(playCallback != nullptr){
 				playCallback(error, nullptr);
 			}
@@ -56,10 +55,8 @@ void PreparedStatement::loop(uint micros){
 	LoopManager::removeListener(this);
 
 	if(playCallback != nullptr){
-		Serial.println("before callback");
 		playCallback(TTSError::OK, source);
 	}
-	Serial.println("after callback");
 }
 
 void PreparedStatement::prepare(void (*playCallback)(TTSError error, CompositeAudioFileSource* source)){
