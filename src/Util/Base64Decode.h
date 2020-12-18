@@ -9,13 +9,14 @@ class Base64Decode : public WriteStream {
 public:
 	explicit Base64Decode(WriteStream* destination);
 
+	uint8_t write_return(unsigned char byte);
 	void write(unsigned char byte) override;
 
 private:
 	WriteStream* destination;
 	std::vector<unsigned char> buffer;
 
-	void writeBuffer();
+	uint8_t writeBuffer();
 	char getFromQueue();
 };
 

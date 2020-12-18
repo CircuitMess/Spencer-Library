@@ -33,11 +33,12 @@ void TextToSpeechImpl::doJob(const TTSJob& job){
 	const char* filename = *fileStash.begin();
 	fileStash.erase(filename);
 	stashMut.unlock();
-
-	*job.resultFilename = generateSpeech(job.text, filename);
+	
+	*job.error = generateSpeech(job.text, job.size, filename);
+	*job.resultFilename = filename;
 }
 
-const char* TextToSpeechImpl::generateSpeech(const char* text, const char* filename){
+TTSError TextToSpeechImpl::generateSpeech(const char* text, uint32_t *size, const char* filename){
 	const char pattern[] = "{ 'input': { 'text': '%s' },"
 						   "'voice': {"
 						   "'languageCode': 'en-US',"
@@ -56,8 +57,10 @@ const char* TextToSpeechImpl::generateSpeech(const char* text, const char* filen
 	StreamableHTTPClient http;
 	http.useHTTP10(true);
 	http.setReuse(false);
-	http.begin("https://spencer.circuitmess.com:8443/tts/v1/text:synthesize", CA);
-	http.addHeader("Key", "Foo");
+	if(!http.begin("https://spencer.circuitmess.com:8443/tts/v1/text:synthesize", CA)){
+		return TTSError::NETWORK;
+	}
+	http.addHeader("Key", "AIzaSyAfH6xrdxj1cC4qtKTBgAK4wdIY_Pin4Wc");
 	http.addHeader("Content-Type", "application/json; charset=utf-8");
 	http.addHeader("Accept-Encoding", "identity");
 	http.addHeader("Content-Length", String(length));
@@ -67,7 +70,7 @@ const char* TextToSpeechImpl::generateSpeech(const char* text, const char* filen
 		http.end();
 		http.getStream().stop();
 		http.getStream().flush();
-		return nullptr;
+		return TTSError::NETWORK;
 	}
 
 	if(!http.send(reinterpret_cast<uint8_t*>(data), length)){
@@ -75,7 +78,7 @@ const char* TextToSpeechImpl::generateSpeech(const char* text, const char* filen
 		http.end();
 		http.getStream().stop();
 		http.getStream().flush();
-		return nullptr;
+		return TTSError::NETWORK;
 	}
 
 	int code = http.finish();
@@ -84,7 +87,7 @@ const char* TextToSpeechImpl::generateSpeech(const char* text, const char* filen
 		http.end();
 		http.getStream().stop();
 		http.getStream().flush();
-		return nullptr;
+		return TTSError::JSON;
 	}
 
 	enum { PRE, PROP, VAL, POST } state = PRE;
@@ -106,7 +109,9 @@ const char* TextToSpeechImpl::generateSpeech(const char* text, const char* filen
 				state = PRE;
 			}
 		}else if(state == VAL){
-			processStream(stream, filename);
+			if(!processStream(stream, filename, size)){
+				return TTSError::FILE;
+			}
 			processed = true;
 			break;
 		}
@@ -118,27 +123,32 @@ const char* TextToSpeechImpl::generateSpeech(const char* text, const char* filen
 
 	if(!processed){
 		Serial.println("Error processing stream");
-		return nullptr;
+		return TTSError::JSON;
 	}
 
-	return filename;
+	return TTSError::OK;
 }
 
-void TextToSpeechImpl::processStream(WiFiClient& stream, const char* filename){
+bool TextToSpeechImpl::processStream(WiFiClient& stream, const char* filename, uint32_t *size){
 	SerialFlash.createErasable(filename, 64000);
 	SerialFlashFile file = SerialFlash.open(filename);
+	if(!(file)){
+		*size = 0;
+		return false;
+	}
 	file.erase();
 
 	FileWriteStream fileStream(file);
 	Base64Decode decodeStream(&fileStream);
-
+	uint32_t written = 0;
 	unsigned char byte;
 	int status;
 	while(stream.available() && (status = stream.read(&byte, 1)) && byte != '"'){
 		if(status != 1) continue;
 		if(byte == '\n') continue;
-		decodeStream.write(byte);
+		written+=decodeStream.write_return(byte);
 	}
+	*size = written;
 
 	fileStream.flush();
 	file.close();
