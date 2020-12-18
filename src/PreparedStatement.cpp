@@ -15,6 +15,15 @@ void PreparedStatement::addSample(AudioFileSource* sample){
 }
 
 void PreparedStatement::addTTS(const char* text){
+	if(parts.size() > 3){
+		uint8_t temp = 0;
+		for(Part& part : parts){
+			if(part.type == Part::TTS){
+				temp++;
+			}
+		}
+		if(temp > 3) return;
+	}
 	parts.push_back({ Part::TTS, (void*) text });
 }
 
@@ -28,7 +37,7 @@ void PreparedStatement::loop(uint micros){
 				playCallback(error, nullptr);
 			}
 			playCallback = nullptr;
-			LoopManager::removeListener(this);
+			return;
 		}
 	}
 

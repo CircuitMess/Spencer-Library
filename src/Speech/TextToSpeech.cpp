@@ -80,7 +80,6 @@ TTSError TextToSpeechImpl::generateSpeech(const char* text, uint32_t *size, cons
 		http.getStream().flush();
 		return TTSError::NETWORK;
 	}
-
 	int code = http.finish();
 	if(code != 200){
 		Serial.printf("HTTP code %d\n", code);
@@ -130,6 +129,10 @@ TTSError TextToSpeechImpl::generateSpeech(const char* text, uint32_t *size, cons
 }
 
 bool TextToSpeechImpl::processStream(WiFiClient& stream, const char* filename, uint32_t *size){
+	if(filename == nullptr){
+		*size = 0;
+		return false;
+	}
 	SerialFlash.createErasable(filename, 64000);
 	SerialFlashFile file = SerialFlash.open(filename);
 	if(!(file)){
@@ -149,7 +152,6 @@ bool TextToSpeechImpl::processStream(WiFiClient& stream, const char* filename, u
 		written+=decodeStream.write_return(byte);
 	}
 	*size = written;
-
 	fileStream.flush();
 	file.close();
 }
