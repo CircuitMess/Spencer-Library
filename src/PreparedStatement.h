@@ -6,6 +6,11 @@
 #include "Audio/CompositeAudioFileSource.h"
 #include <Loop/LoopListener.h>
 #include "Speech/TextToSpeech.h"
+
+/**
+ * @brief Combines multiple AudioFileSource objects and TTS generated speech into a single object.
+ * 
+ */
 class PreparedStatement : public LoopListener {
 public:
 	virtual ~PreparedStatement();
