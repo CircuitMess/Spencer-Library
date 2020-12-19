@@ -21,13 +21,13 @@
 #define BTN_PIN 17
 #define LED_PIN 26
 
-class Spencer
+class SpencerImpl
 {
 public:
-	Spencer();
-	~Spencer();
+	SpencerImpl();
+	~SpencerImpl();
 	void begin();
-	void startLoopTask();
 };
 
+extern SpencerImpl Spencer;
 #endif

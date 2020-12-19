@@ -1,18 +1,17 @@
-#include "Spencer.hpp"
+#include "Spencer.h"
+SpencerImpl Spencer;
 
-Spencer::Spencer()
+SpencerImpl::SpencerImpl()
 {
 }
 
-Spencer::~Spencer()
+SpencerImpl::~SpencerImpl()
 {
 }
 
 
-void Spencer::begin()
+void SpencerImpl::begin()
 {
-	Serial.begin(115200);
-
 	disableCore0WDT();
 	disableCore1WDT();
 
@@ -44,9 +43,4 @@ void Spencer::begin()
 	Net.set(Settings.get().SSID, Settings.get().pass);
 
 	LoopManager::setStackSize(10240);
-}
-
-void Spencer::startLoopTask()
-{
-	LoopManager::startTask(2, 1);
 }

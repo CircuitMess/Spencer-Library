@@ -1,14 +1,11 @@
 #include <Arduino.h>
-#include "src/Spencer.hpp"
-
+#include "src/Spencer.h"
 Spencer spencer;
 
 void setup(){
 	spencer.begin();
-	spencer.startLoopTask();
 }
 
 void loop(){
-
-
+	LoopManager::loop();
 }
