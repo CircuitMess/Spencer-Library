@@ -21,25 +21,43 @@ bool PreparedStatement::addTTS(const char* text){
 }
 
 void PreparedStatement::loop(uint micros){
-	for(TTSError error : errors){
-		if(error != TTSError::OK && error != TTSError::UNDEFINED){
-			LoopManager::removeListener(this);
-			if(playCallback != nullptr){
-				playCallback(error, nullptr);
+	uint8_t j = 0;
+	for(const Part& part : parts){
+		if(part.type == Part::TTS){
+			if(j >= errors.size()){
+				files.push_back(nullptr);
+				errors.push_back(TTSError::UNDEFINED);
+				fileSizes.push_back(0);
+				TextToSpeech.addJob({ static_cast<const char*>(part.content), &files.back(), &errors.back(), &fileSizes.back() });
+				return;
+			}else{
+				TTSError error = errors[j];
+				if(error == TTSError::UNDEFINED) return;
+				else if(error != TTSError::OK && error != TTSError::FILELIMIT){
+					LoopManager::removeListener(this);
+					if(playCallback != nullptr){
+						playCallback(error, nullptr);
+					}
+					return;
+				}
 			}
-			return;
+			j++;
 		}
-		if(error == TTSError::UNDEFINED) return;
 	}
 
 
 	CompositeAudioFileSource* source = new CompositeAudioFileSource();
 	int i = 0;
+	bool fileLimitError = false;
 	for(const Part& part : parts){
 		if(part.type == Part::SAMPLE){
 			source->add(static_cast<AudioFileSource*>(part.content));
 		}else{
-			source->add(new AudioFileSourceSerialFlash(files[i], fileSizes[i]));
+			if(errors[i] != TTSError::FILELIMIT){
+				source->add(new AudioFileSourceSerialFlash(files[i], fileSizes[i]));
+			}else{
+				fileLimitError = true;
+			}
 			i++;
 		}
 	}
@@ -47,7 +65,7 @@ void PreparedStatement::loop(uint micros){
 	LoopManager::removeListener(this);
 
 	if(playCallback != nullptr){
-		playCallback(TTSError::OK, source);
+		playCallback(fileLimitError ? TTSError::FILELIMIT : TTSError::OK, source);
 	}
 }
 
@@ -70,7 +88,7 @@ void PreparedStatement::prepare(void (*playCallback)(TTSError error, CompositeAu
 			errors.push_back(TTSError::UNDEFINED);
 			fileSizes.push_back(0);
 			TextToSpeech.addJob({ static_cast<const char*>(part.content), &files.back(), &errors.back(), &fileSizes.back() });
-
+			break;
 		}
 	}
 
