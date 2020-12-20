@@ -34,6 +34,7 @@ void TextToSpeechImpl::doJob(const TTSJob& job){
 
 	stashMut.lock();
 	if(fileStash.size() == 0){
+		Serial.println("TTS file limit reached");
 		stashMut.unlock();
 		*job.error = TTSError::FILELIMIT;
 		*job.resultFilename = nullptr;
