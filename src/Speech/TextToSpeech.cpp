@@ -70,6 +70,7 @@ TTSError TextToSpeechImpl::generateSpeech(const char* text, uint32_t *size, cons
 	http.useHTTP10(true);
 	http.setReuse(false);
 	if(!http.begin("https://spencer.circuitmess.com:8443/tts/v1/text:synthesize", CA)){
+		free(data);
 		return TTSError::NETWORK;
 	}
 	http.addHeader("Key", "AIzaSyAfH6xrdxj1cC4qtKTBgAK4wdIY_Pin4Wc");
@@ -82,6 +83,7 @@ TTSError TextToSpeechImpl::generateSpeech(const char* text, uint32_t *size, cons
 		http.end();
 		http.getStream().stop();
 		http.getStream().flush();
+		free(data);
 		return TTSError::NETWORK;
 	}
 
@@ -90,8 +92,10 @@ TTSError TextToSpeechImpl::generateSpeech(const char* text, uint32_t *size, cons
 		http.end();
 		http.getStream().stop();
 		http.getStream().flush();
+		free(data);
 		return TTSError::NETWORK;
 	}
+	free(data);
 	int code = http.finish();
 	if(code != 200){
 		Serial.printf("HTTP code %d\n", code);
