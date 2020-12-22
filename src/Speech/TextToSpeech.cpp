@@ -15,6 +15,7 @@ const char* stash[] = {
 };
 
 #define STASH_COUNT (sizeof(stash) / sizeof(stash[0]))
+#define CHAR_LIMIT 130
 
 TextToSpeechImpl TextToSpeech;
 
@@ -29,16 +30,28 @@ void TextToSpeechImpl::releaseRecording(const char* filename){
 }
 
 void TextToSpeechImpl::doJob(const TTSJob& job){
+	
+
 	stashMut.lock();
+	if(fileStash.size() == 0){
+		Serial.println("TTS file limit reached");
+		stashMut.unlock();
+		*job.error = TTSError::FILELIMIT;
+		*job.resultFilename = nullptr;
+		*job.size = 0;
+		return;
+	}
+
 	const char* filename = *fileStash.begin();
 	fileStash.erase(filename);
 	stashMut.unlock();
 
-	*job.resultFilename = generateSpeech(job.text, filename);
+	*job.error = generateSpeech(job.text, job.size, filename);
+	*job.resultFilename = filename;
 }
 
-const char* TextToSpeechImpl::generateSpeech(const char* text, const char* filename){
-	const char pattern[] = "{ 'input': { 'text': '%s' },"
+TTSError TextToSpeechImpl::generateSpeech(const char* text, uint32_t *size, const char* filename){
+	const char pattern[] = "{ 'input': { 'text': '%.*s' },"
 						   "'voice': {"
 						   "'languageCode': 'en-US',"
 						   "'name': 'en-US-Standard-D',"
@@ -50,14 +63,17 @@ const char* TextToSpeechImpl::generateSpeech(const char* text, const char* filen
 						   "'sampleRateHertz': 16000"
 						   "}}";
 
-	char* data = (char*) malloc(sizeof(pattern) + strlen(text) + 2);
-	uint length = sprintf(data, pattern, text);
+	char* data = (char*) malloc(sizeof(pattern) + (strlen(text) > CHAR_LIMIT ? CHAR_LIMIT : strlen(text)) + 2);
+	uint length = sprintf(data, pattern, CHAR_LIMIT, text);
 
 	StreamableHTTPClient http;
 	http.useHTTP10(true);
 	http.setReuse(false);
-	http.begin("https://spencer.circuitmess.com:8443/tts/v1/text:synthesize", CA);
-	http.addHeader("Key", "Foo");
+	if(!http.begin("https://spencer.circuitmess.com:8443/tts/v1/text:synthesize", CA)){
+		free(data);
+		return TTSError::NETWORK;
+	}
+	http.addHeader("Key", "AIzaSyAfH6xrdxj1cC4qtKTBgAK4wdIY_Pin4Wc");
 	http.addHeader("Content-Type", "application/json; charset=utf-8");
 	http.addHeader("Accept-Encoding", "identity");
 	http.addHeader("Content-Length", String(length));
@@ -67,7 +83,8 @@ const char* TextToSpeechImpl::generateSpeech(const char* text, const char* filen
 		http.end();
 		http.getStream().stop();
 		http.getStream().flush();
-		return nullptr;
+		free(data);
+		return TTSError::NETWORK;
 	}
 
 	if(!http.send(reinterpret_cast<uint8_t*>(data), length)){
@@ -75,16 +92,17 @@ const char* TextToSpeechImpl::generateSpeech(const char* text, const char* filen
 		http.end();
 		http.getStream().stop();
 		http.getStream().flush();
-		return nullptr;
+		free(data);
+		return TTSError::NETWORK;
 	}
-
+	free(data);
 	int code = http.finish();
 	if(code != 200){
 		Serial.printf("HTTP code %d\n", code);
 		http.end();
 		http.getStream().stop();
 		http.getStream().flush();
-		return nullptr;
+		return TTSError::JSON;
 	}
 
 	enum { PRE, PROP, VAL, POST } state = PRE;
@@ -106,7 +124,9 @@ const char* TextToSpeechImpl::generateSpeech(const char* text, const char* filen
 				state = PRE;
 			}
 		}else if(state == VAL){
-			processStream(stream, filename);
+			if(!processStream(stream, filename, size)){
+				return TTSError::FILE;
+			}
 			processed = true;
 			break;
 		}
@@ -118,28 +138,36 @@ const char* TextToSpeechImpl::generateSpeech(const char* text, const char* filen
 
 	if(!processed){
 		Serial.println("Error processing stream");
-		return nullptr;
+		return TTSError::JSON;
 	}
 
-	return filename;
+	return TTSError::OK;
 }
 
-void TextToSpeechImpl::processStream(WiFiClient& stream, const char* filename){
+bool TextToSpeechImpl::processStream(WiFiClient& stream, const char* filename, uint32_t *size){
+	if(filename == nullptr){
+		*size = 0;
+		return false;
+	}
 	SerialFlash.createErasable(filename, 64000);
 	SerialFlashFile file = SerialFlash.open(filename);
+	if(!(file)){
+		*size = 0;
+		return false;
+	}
 	file.erase();
 
 	FileWriteStream fileStream(file);
 	Base64Decode decodeStream(&fileStream);
-
+	uint32_t written = 0;
 	unsigned char byte;
 	int status;
 	while(stream.available() && (status = stream.read(&byte, 1)) && byte != '"'){
 		if(status != 1) continue;
 		if(byte == '\n') continue;
-		decodeStream.write(byte);
+		written+=decodeStream.write_return(byte);
 	}
-
+	*size = written;
 	fileStream.flush();
 	file.close();
 }
