@@ -1,6 +1,6 @@
 #include "Spencer.h"
 SpencerImpl Spencer;
-
+LEDmatrixImpl LEDmatrix;
 SpencerImpl::SpencerImpl()
 {
 }

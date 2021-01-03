@@ -2,7 +2,7 @@
 #include <Loop/LoopManager.h>
 #include <HTTPClient.h>
 #include <ESP32Ping.h>
-#include "LEDmatrix/LEDmatrix.h"
+#include "../Spencer.h"
 #include "Net.h"
 
 NetImpl Net;
@@ -39,7 +39,7 @@ void NetImpl::connect(NetImpl::NetStateCallback* resultCallback){
 
 	connectResultCallback = resultCallback;
 
-	LEDmatrix.startAnimation(new Animation("GIF-wifi.gif"), true);
+	LEDmatrix.startAnimation(new Animation( new SerialFlashFileAdapter("GIF-wifi.gif")), true);
 
 	state = WL_DISCONNECTED;
 

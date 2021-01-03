@@ -5,13 +5,14 @@
 #include <Input/InputGPIO.h>
 #include "Speech/SpeechToIntent.h"
 #include "Audio/Playback.h"
-#include "LEDmatrix/LEDmatrix.h"
+#include <Devices/LEDmatrix/LEDmatrix.h>
 #include <Loop/LoopManager.h>
 #include <WiFi.h>
 #include "Audio/Recording.h"
 #include <Util/Task.h>
 #include "Settings.h"
 #include "Net/Net.h"
+#include <Devices/LEDmatrix/SerialFlashFileAdapter.h>
 
 #ifndef SPENCER_HPP
 #define SPENCER_HPP
@@ -29,5 +30,6 @@ public:
 	void begin();
 };
 
+extern LEDmatrixImpl LEDmatrix;
 extern SpencerImpl Spencer;
 #endif
