@@ -3,7 +3,7 @@
 
 #include <HTTPClient.h>
 #include <set>
-#include "../Util/StreamableHTTPClient.h"
+#include <Network/StreamableHTTPClient.h>
 #include "../AsyncProcessor.hpp"
 
 enum class TTSError { OK = 0, NETWORK, FILE, JSON, KEY, UNDEFINED, FILELIMIT };

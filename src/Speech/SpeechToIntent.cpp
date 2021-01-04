@@ -2,8 +2,8 @@
 #include <ArduinoJson.h>
 #include "SpeechToIntent.h"
 #include "../Util/Base64Encode.h"
-#include "../Util/StreamableHTTPClient.h"
-#include "../Net/Net.h"
+#include <Network/StreamableHTTPClient.h>
+#include <Network/Net.h>
 #include "../Settings.h"
 #include "../Audio/Compression.h"
 
