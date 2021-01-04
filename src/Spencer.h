@@ -12,7 +12,7 @@
 #include <Util/Task.h>
 #include "Settings.h"
 #include <Network/Net.h>
-#include <Devices/LEDmatrix/SerialFlashFileAdapter.h>
+#include <Devices/SerialFlash/SerialFlashFileAdapter.h>
 
 #ifndef SPENCER_HPP
 #define SPENCER_HPP
