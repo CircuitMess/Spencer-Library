@@ -11,7 +11,7 @@
 #include "Audio/Recording.h"
 #include <Util/Task.h>
 #include "Settings.h"
-#include "Net/Net.h"
+#include <Network/Net.h>
 #include <Devices/LEDmatrix/SerialFlashFileAdapter.h>
 
 #ifndef SPENCER_HPP
