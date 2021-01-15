@@ -73,7 +73,6 @@ TTSError TextToSpeechImpl::generateSpeech(const char* text, uint32_t *size, cons
 		free(data);
 		return TTSError::NETWORK;
 	}
-	http.addHeader("Key", "AIzaSyAfH6xrdxj1cC4qtKTBgAK4wdIY_Pin4Wc");
 	http.addHeader("Content-Type", "application/json; charset=utf-8");
 	http.addHeader("Accept-Encoding", "identity");
 	http.addHeader("Content-Length", String(length));
