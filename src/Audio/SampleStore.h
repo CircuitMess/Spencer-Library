@@ -3,7 +3,7 @@
 #include <AudioFileSource.h>
 
 enum SampleGroup{
-	Months, Numbers, Jokes, Generic, Time, Special, Weather, Weekdays, Volume, Brightness, Levels, Error
+	Months, Numbers, Jokes, Generic, Time, Special, Weather, Weekdays, Volume, Brightness, Levels, Error, Funpack
 };
 
 class SampleStore
