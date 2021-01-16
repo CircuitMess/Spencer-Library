@@ -36,6 +36,8 @@ bool CompositeAudioFileSource::open(const char *filename)
 
 uint32_t CompositeAudioFileSource::read(void *data, uint32_t len)
 {
+	if(currentFileIndex >= filePointers.size()) return 0;
+
 	int readBytes = getCurrentFile()->read(reinterpret_cast<uint8_t*>(data), len);
 	if(readBytes == 0 && currentFileIndex < filePointers.size() - 1)
 	{
@@ -49,6 +51,8 @@ uint32_t CompositeAudioFileSource::read(void *data, uint32_t len)
 
 bool CompositeAudioFileSource::seek(int32_t pos, int dir)
 {
+	if(filePointers.empty()) return false;
+
 	if(dir == SEEK_CUR && pos > (size - 1)) return false;
 	switch (dir)
 	{
@@ -68,6 +72,7 @@ bool CompositeAudioFileSource::seek(int32_t pos, int dir)
 			fileIndex++;
 		}
 		fileIndex--;
+		if(currentFileIndex >= filePointers.size()) return false;
 		currentFileIndex = fileIndex;
 		getCurrentFile()->seek(pos, SEEK_CUR);
 		break;
@@ -87,7 +92,14 @@ bool CompositeAudioFileSource::close()
 
 bool CompositeAudioFileSource::isOpen()
 {
-	return getCurrentFile()->isOpen();
+	if(filePointers.empty()) return false;
+
+	bool open = true;
+	for(const auto& part : filePointers){
+		open &= part->isOpen();
+	}
+
+	return open;
 }
 
 uint32_t CompositeAudioFileSource::getSize()
@@ -96,6 +108,8 @@ uint32_t CompositeAudioFileSource::getSize()
 }
 uint32_t CompositeAudioFileSource::getPos()
 {
+	if(filePointers.empty()) return 0;
+
 	size_t pos = 0;
 	for(size_t i = 0; i < currentFileIndex; i++)
 	{
