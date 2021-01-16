@@ -108,7 +108,7 @@ TTSError TextToSpeechImpl::generateSpeech(const char* text, uint32_t *size, cons
 	WiFiClient& stream = http.getStream();
 	bool processed = false;
 
-	while(stream.available()){
+	while(stream.connected()){
 		if(state == PRE){
 			readUntilQuote(stream);
 			state = PROP;
@@ -160,10 +160,11 @@ bool TextToSpeechImpl::processStream(WiFiClient& stream, const char* filename, u
 	Base64Decode decodeStream(&fileStream);
 	uint32_t written = 0;
 	unsigned char byte;
-	int status;
-	while(stream.available() && (status = stream.read(&byte, 1)) && byte != '"'){
-		if(status != 1) continue;
-		if(byte == '\n') continue;
+	while(stream.connected()){
+		if(!stream.available()) continue;
+		if(stream.read(&byte, 1) != 1) continue;
+		if(byte == '"') break;
+		if(byte == '\n' || byte == '\r') continue;
 		written+=decodeStream.write_return(byte);
 	}
 	*size = written;
