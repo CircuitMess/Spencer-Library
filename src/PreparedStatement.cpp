@@ -20,6 +20,10 @@ bool PreparedStatement::addTTS(const char* text){
 	return true;
 }
 
+bool PreparedStatement::addTTS(const String& text){
+	addTTS(text.c_str());
+}
+
 void PreparedStatement::loop(uint micros){
 	uint8_t j = 0;
 	for(const Part& part : parts){

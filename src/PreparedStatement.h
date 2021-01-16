@@ -27,6 +27,8 @@ public:
 	 */
 	bool addTTS(const char* text);
 
+	bool addTTS(const String& text);
+
 	/**
 	 * @brief Does the TTS downloading and combining into a single audio file. Executes callback when done or when error occurs.
 	 * 
