@@ -8,6 +8,10 @@ PreparedStatement::~PreparedStatement(){
 		if(filename == nullptr) return;
 		TextToSpeech.releaseRecording(filename);
 	}
+
+	for(String* string : stringTTS){
+		delete string;
+	}
 }
 
 void PreparedStatement::addSample(AudioFileSource* sample){
@@ -15,13 +19,16 @@ void PreparedStatement::addSample(AudioFileSource* sample){
 }
 
 bool PreparedStatement::addTTS(const char* text){
+	if(text == nullptr) return false;
 	if(strlen(text) > 130) return false;
 	parts.push_back({ Part::TTS, (void*) text });
 	return true;
 }
 
 bool PreparedStatement::addTTS(const String& text){
-	addTTS(text.c_str());
+	if(text.length() == 0) return false;
+	stringTTS.push_back(new String(text));
+	addTTS(stringTTS.back()->c_str());
 }
 
 void PreparedStatement::loop(uint micros){

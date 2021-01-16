@@ -46,6 +46,7 @@ private:
 	};
 	std::vector<Part> parts;
 	std::vector<const char*> files;
+	std::vector<String*> stringTTS;
 	std::vector<uint32_t> fileSizes;
 	std::vector<TTSError> errors;
 
