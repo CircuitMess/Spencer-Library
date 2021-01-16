@@ -78,7 +78,7 @@ void PreparedStatement::loop(uint micros){
 	if(playCallback != nullptr){
 		playCallback(fileLimitError ? TTSError::FILELIMIT : TTSError::OK, source);
 	}else{
-		free(source);
+		delete source;
 	}
 }
 
