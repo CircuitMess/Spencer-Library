@@ -6,12 +6,21 @@
 #include <Network/StreamableHTTPClient.h>
 #include "../AsyncProcessor.hpp"
 
-enum class TTSError { OK = 0, NETWORK, FILE, JSON, KEY, UNDEFINED, FILELIMIT };
+extern const char* TTSStrings[];
+
+enum class TTSError { OK = 0, NETWORK, FILE, JSON, KEY, FILELIMIT, TEXTLIMIT };
+
+struct TTSResult {
+	TTSResult(TTSError error);
+
+	const char* filename;
+	TTSError error;
+	size_t size;
+};
+
 struct TTSJob {
 	const char* text;
-	const char** resultFilename;
-	TTSError *error;
-	uint32_t* size;
+	TTSResult** result;
 };
 class TextToSpeechImpl : public AsyncProcessor<TTSJob> {
 public:
@@ -23,8 +32,8 @@ protected:
 	void doJob(const TTSJob& job) override;
 
 private:
-	TTSError generateSpeech(const char* text, uint32_t* size, const char* filename = "speech.mp3");
-	bool processStream(WiFiClient& stream, const char* filename, uint32_t* size);
+	TTSResult* generateSpeech(const char* text, const char* filename = "speech.mp3");
+	size_t processStream(WiFiClient& stream, const char* filename);
 	void readUntilQuote(WiFiClient& stream);
 
 	std::set<const char*> fileStash;

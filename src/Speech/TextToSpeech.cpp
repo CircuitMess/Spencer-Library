@@ -14,10 +14,14 @@ const char* stash[] = {
 		"recording-4.mp3"
 };
 
+const char* TTSStrings[] = { "OK", "not connected to a network", "buffer file error", "server response error", "server error", "file limit", "text limit" };
+
 #define STASH_COUNT (sizeof(stash) / sizeof(stash[0]))
 #define CHAR_LIMIT 130
 
 TextToSpeechImpl TextToSpeech;
+
+TTSResult::TTSResult(TTSError error) : error(error), filename(nullptr), size(0){ }
 
 TextToSpeechImpl::TextToSpeechImpl() : AsyncProcessor("TTS_Task", STASH_COUNT), fileStash(::stash, ::stash + STASH_COUNT){
 
@@ -30,15 +34,16 @@ void TextToSpeechImpl::releaseRecording(const char* filename){
 }
 
 void TextToSpeechImpl::doJob(const TTSJob& job){
-	
+	if(strlen(job.text) > 130){
+		*job.result = new TTSResult(TTSError::TEXTLIMIT);
+		return;
+	}
 
 	stashMut.lock();
 	if(fileStash.size() == 0){
-		Serial.println("TTS file limit reached");
+		Serial.println("TTS is limited to 4 simultaneous samples");
 		stashMut.unlock();
-		*job.error = TTSError::FILELIMIT;
-		*job.resultFilename = nullptr;
-		*job.size = 0;
+		*job.result = new TTSResult(TTSError::FILELIMIT);
 		return;
 	}
 
@@ -46,11 +51,10 @@ void TextToSpeechImpl::doJob(const TTSJob& job){
 	fileStash.erase(filename);
 	stashMut.unlock();
 
-	*job.error = generateSpeech(job.text, job.size, filename);
-	*job.resultFilename = filename;
+	*job.result = generateSpeech(job.text, filename);
 }
 
-TTSError TextToSpeechImpl::generateSpeech(const char* text, uint32_t *size, const char* filename){
+TTSResult* TextToSpeechImpl::generateSpeech(const char* text, const char* filename){
 	const char pattern[] = "{ 'input': { 'text': '%.*s' },"
 						   "'voice': {"
 						   "'languageCode': 'en-US',"
@@ -71,7 +75,7 @@ TTSError TextToSpeechImpl::generateSpeech(const char* text, uint32_t *size, cons
 	http.setReuse(false);
 	if(!http.begin("https://spencer.circuitmess.com:8443/tts/v1/text:synthesize", CA)){
 		free(data);
-		return TTSError::NETWORK;
+		return new TTSResult(TTSError::NETWORK);
 	}
 	http.addHeader("Content-Type", "application/json; charset=utf-8");
 	http.addHeader("Accept-Encoding", "identity");
@@ -83,7 +87,7 @@ TTSError TextToSpeechImpl::generateSpeech(const char* text, uint32_t *size, cons
 		http.getStream().stop();
 		http.getStream().flush();
 		free(data);
-		return TTSError::NETWORK;
+		return new TTSResult(TTSError::NETWORK);
 	}
 
 	if(!http.send(reinterpret_cast<uint8_t*>(data), length)){
@@ -92,7 +96,7 @@ TTSError TextToSpeechImpl::generateSpeech(const char* text, uint32_t *size, cons
 		http.getStream().stop();
 		http.getStream().flush();
 		free(data);
-		return TTSError::NETWORK;
+		return new TTSResult(TTSError::NETWORK);
 	}
 	free(data);
 	int code = http.finish();
@@ -101,12 +105,13 @@ TTSError TextToSpeechImpl::generateSpeech(const char* text, uint32_t *size, cons
 		http.end();
 		http.getStream().stop();
 		http.getStream().flush();
-		return TTSError::JSON;
+		return new TTSResult(TTSError::JSON);
 	}
 
 	enum { PRE, PROP, VAL, POST } state = PRE;
 	WiFiClient& stream = http.getStream();
 	bool processed = false;
+	size_t fileSize = 0;
 
 	while(stream.connected()){
 		if(state == PRE){
@@ -123,8 +128,8 @@ TTSError TextToSpeechImpl::generateSpeech(const char* text, uint32_t *size, cons
 				state = PRE;
 			}
 		}else if(state == VAL){
-			if(!processStream(stream, filename, size)){
-				return TTSError::FILE;
+			if((fileSize = processStream(stream, filename)) == 0){
+				return new TTSResult(TTSError::FILE);
 			}
 			processed = true;
 			break;
@@ -137,39 +142,40 @@ TTSError TextToSpeechImpl::generateSpeech(const char* text, uint32_t *size, cons
 
 	if(!processed){
 		Serial.println("Error processing stream");
-		return TTSError::JSON;
+		return new TTSResult(TTSError::JSON);
 	}
 
-	return TTSError::OK;
+	TTSResult* result = new TTSResult(TTSError::OK);
+	result->filename = filename;
+	result->size = fileSize;
+	return result;
 }
 
-bool TextToSpeechImpl::processStream(WiFiClient& stream, const char* filename, uint32_t *size){
+size_t TextToSpeechImpl::processStream(WiFiClient& stream, const char* filename){
 	if(filename == nullptr){
-		*size = 0;
-		return false;
+		return 0;
 	}
 	SerialFlash.createErasable(filename, 64000);
 	SerialFlashFile file = SerialFlash.open(filename);
 	if(!(file)){
-		*size = 0;
-		return false;
+		return 0;
 	}
 	file.erase();
 
 	FileWriteStream fileStream(file);
 	Base64Decode decodeStream(&fileStream);
-	uint32_t written = 0;
+	uint32_t size = 0;
 	unsigned char byte;
 	while(stream.connected()){
 		if(!stream.available()) continue;
 		if(stream.read(&byte, 1) != 1) continue;
 		if(byte == '"') break;
 		if(byte == '\n' || byte == '\r') continue;
-		written+=decodeStream.write_return(byte);
+		size += decodeStream.write_return(byte);
 	}
-	*size = written;
 	fileStream.flush();
 	file.close();
+	return size;
 }
 
 void TextToSpeechImpl::readUntilQuote(WiFiClient& stream){
