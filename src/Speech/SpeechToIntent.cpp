@@ -117,24 +117,28 @@ IntentResult* SpeechToIntentImpl::identifyVoice(const char* filename){
 		return new IntentResult(IntentResult::INTENT);
 	}
 
-	const char* intent = json["intents"][0]["name"].as<const char*>();
-	if(intent[0] == '\0'){
-		return new IntentResult(IntentResult::INTENT);
-	}
-
 	IntentResult* result = new IntentResult(IntentResult::OK);
-	result->confidence = json["intents"][0]["confidence"].as<float>();
-
-	uint32_t intentLength = strlen(intent);
-	result->intent = static_cast<char*>(malloc(intentLength + 1));
-	memset(result->intent, 0, intentLength+1);
-	memcpy(result->intent, intent, intentLength);
 
 	const char* transcript = json["text"].as<const char*>();
 	uint32_t transcriptLength = strlen(transcript);
 	result->transcript = static_cast<char*>(malloc(transcriptLength + 1));
 	memset(result->transcript, 0, transcriptLength+1);
 	memcpy(result->transcript, transcript, transcriptLength);
+
+	const char* intent = json["intents"][0]["name"].as<const char*>();
+	if(intent[0] == '\0'){
+		result->intent = nullptr;
+		result->confidence = 1;
+		result->error = IntentResult::INTENT;
+		return result;
+	}
+
+	result->confidence = json["intents"][0]["confidence"].as<float>();
+
+	uint32_t intentLength = strlen(intent);
+	result->intent = static_cast<char*>(malloc(intentLength + 1));
+	memset(result->intent, 0, intentLength+1);
+	memcpy(result->intent, intent, intentLength);
 
 	if(!json.containsKey("entities")) return result;
 
