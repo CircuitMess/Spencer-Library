@@ -9,6 +9,8 @@
 #include <map>
 #include "../AsyncProcessor.hpp"
 
+extern const char* STIStrings[];
+
 struct IntentResult {
 	enum Error { OK = 0, NETWORK, FILE, JSON, INTENT, KEY } error;
 	char* transcript;

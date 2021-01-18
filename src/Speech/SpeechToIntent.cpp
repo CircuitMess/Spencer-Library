@@ -9,6 +9,8 @@
 
 #define CA "DC:03:B5:D6:0C:F1:02:F1:B1:D0:62:27:9F:3E:B4:C3:CD:C9:93:BA:20:65:6D:06:DC:5D:56:AC:CC:BA:40:20"
 
+const char* STIStrings[] = { "OK", "not connected to a network", "buffer file error", "server response error", "no intent detected", "server error" };
+
 SpeechToIntentImpl SpeechToIntent;
 
 IntentResult::IntentResult(Error error) : error(error), entities({}){
