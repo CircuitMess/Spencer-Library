@@ -58,6 +58,10 @@ void TextToSpeechImpl::doJob(const TTSJob& job){
 	stashMut.unlock();
 
 	*job.result = generateSpeech(job.text, filename);
+
+	if((*job.result)->error != TTSError::OK){
+		releaseRecording(filename);
+	}
 }
 
 TTSResult* TextToSpeechImpl::generateSpeech(const char* text, const char* filename){
