@@ -180,5 +180,9 @@ size_t TextToSpeechImpl::processStream(WiFiClient& stream, const char* filename)
 
 void TextToSpeechImpl::readUntilQuote(WiFiClient& stream){
 	unsigned char byte;
-	while(stream.available() && stream.read(&byte, 1) && byte != '"');
+	while(stream.connected()){
+		if(!stream.available()) continue;
+		stream.read(&byte, 1);
+		if(byte == '"') return;
+	}
 }
