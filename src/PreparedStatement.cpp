@@ -32,21 +32,11 @@ bool PreparedStatement::addTTS(const String& text){
 }
 
 void PreparedStatement::loop(uint micros){
-	uint8_t j = 0;
-	for(const Part& part : parts){
-		if(part.type != Part::TTS) continue;
-
-		if(j >= TTSresults.size()){
-			TTSresults.push_back(nullptr);
-			TextToSpeech.addJob({ static_cast<const char*>(part.content), &TTSresults.back() });
-			return;
-		}else{
-			if(TTSresults[j] == nullptr) return;
-		}
-
-		j++;
+	for(const TTSResult* result : TTSresults){
+		if(result == nullptr) return;
 	}
 
+	LoopManager::removeListener(this);
 
 	CompositeAudioFileSource* source = new CompositeAudioFileSource();
 	int i = 0;
@@ -63,8 +53,6 @@ void PreparedStatement::loop(uint micros){
 			i++;
 		}
 	}
-
-	LoopManager::removeListener(this);
 
 	if(playCallback != nullptr){
 		playCallback(error, source);
