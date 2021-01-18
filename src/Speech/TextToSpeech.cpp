@@ -1,5 +1,6 @@
 #include <sstream>
 #include <SerialFlash.h>
+#include <Network/Net.h>
 #include "TextToSpeech.h"
 #include "../DataStream/FileWriteStream.h"
 #include "../Util/Base64Decode.h"
@@ -36,6 +37,11 @@ void TextToSpeechImpl::releaseRecording(const char* filename){
 void TextToSpeechImpl::doJob(const TTSJob& job){
 	if(strlen(job.text) > 130){
 		*job.result = new TTSResult(TTSError::TEXTLIMIT);
+		return;
+	}
+
+	if(!Net.checkConnection() && !Net.reconnect()){
+		*job.result = new TTSResult(TTSError::NETWORK);
 		return;
 	}
 
