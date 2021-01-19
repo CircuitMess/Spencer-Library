@@ -113,7 +113,7 @@ IntentResult* SpeechToIntentImpl::identifyVoice(const char* filename){
 		return new IntentResult(IntentResult::JSON);
 	}
 
-	if(!json.containsKey("text") || !json.containsKey("intents") || json["intents"].size() == 0){
+	if(!json.containsKey("text")){
 		return new IntentResult(IntentResult::INTENT);
 	}
 
@@ -125,8 +125,8 @@ IntentResult* SpeechToIntentImpl::identifyVoice(const char* filename){
 	memset(result->transcript, 0, transcriptLength+1);
 	memcpy(result->transcript, transcript, transcriptLength);
 
-	const char* intent = json["intents"][0]["name"].as<const char*>();
-	if(intent[0] == '\0'){
+	const char* intent;
+	if(!json.containsKey("intents") || json["intents"].size() == 0 || (intent = json["intents"][0]["name"].as<const char*>())[0] == '\0'){
 		result->intent = nullptr;
 		result->confidence = 1;
 		result->error = IntentResult::INTENT;
