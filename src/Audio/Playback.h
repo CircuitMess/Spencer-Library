@@ -63,7 +63,7 @@ public:
 private:
 	I2S* i2s;
 	AudioGeneratorWAV *wav = nullptr;
-	AudioGeneratorMP3 *mp3;
+	AudioGeneratorMP3 *mp3 = nullptr;
 	AudioOutputI2S *out;
 	AudioFileSource *file;
 	void(*playbackDoneCallback)();
