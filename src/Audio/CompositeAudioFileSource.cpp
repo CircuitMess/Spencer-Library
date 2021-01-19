@@ -9,7 +9,7 @@ CompositeAudioFileSource::CompositeAudioFileSource(AudioFileSource* file) : Comp
 
 CompositeAudioFileSource::~CompositeAudioFileSource()
 {
-	for (auto file : filePointers){
+	for (AudioFileSource* file : filePointers){
 		if(file != nullptr){
 			file->close();
 			delete file;
@@ -22,6 +22,8 @@ void CompositeAudioFileSource::add(AudioFileSource* file)
 	filePointers.push_back(file);
 	file->seek(0, SEEK_SET);
 	size+=file->getSize();
+
+	_open |= file->isOpen();
 }
 AudioFileSource* CompositeAudioFileSource::getCurrentFile()
 {
@@ -88,6 +90,8 @@ bool CompositeAudioFileSource::close()
 			file->close();
 		}
 	}
+
+	_open = false;
 }
 
 bool CompositeAudioFileSource::isOpen()
@@ -99,7 +103,7 @@ bool CompositeAudioFileSource::isOpen()
 		open &= part->isOpen();
 	}
 
-	return open;
+	return open && _open;
 }
 
 uint32_t CompositeAudioFileSource::getSize()

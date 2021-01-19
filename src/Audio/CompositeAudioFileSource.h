@@ -20,12 +20,14 @@ public:
 	virtual uint32_t getPos() override;
 
 	AudioFileSource* getCurrentFile();
-	AudioFileSource* nextFile();
+
 	void add(AudioFileSource* file);
+
 private:
 	std::vector<AudioFileSource*> filePointers;
 	uint currentFileIndex = 0;
 	size_t size = 0;
+	bool _open = false;
 };
 
 #endif
