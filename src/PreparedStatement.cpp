@@ -1,11 +1,10 @@
 #include <Loop/LoopManager.h>
 #include "PreparedStatement.h"
 #include "Audio/AudioFileSourceSerialFlash.h"
-#include "Audio/Playback.h"
 
 PreparedStatement::~PreparedStatement(){
-	for(auto* result : TTSresults){
-		if(result == nullptr) return;
+	for(TTSResult* result : TTSresults){
+		if(result == nullptr) continue;
 		TextToSpeech.releaseRecording(result->filename);
 		delete result;
 	}
@@ -70,8 +69,26 @@ void PreparedStatement::prepare(void (*playCallback)(TTSError error, CompositeAu
 		if(part.type == Part::TTS){
 			TTSresults.push_back(nullptr);
 			TextToSpeech.addJob({ static_cast<const char*>(part.content), &TTSresults.back() });
-			break;
 		}
+	}
+
+	TTSresults.shrink_to_fit();
+
+	if(TTSresults.size() == parts.size()){
+		SerialFlashFile file;
+
+		if(!SerialFlash.exists("silence.mp3")){
+			SerialFlash.create("silence.mp3", 690);
+			file = SerialFlash.open("silence.mp3");
+
+			uint8_t buffer[690];
+			memcpy_P(buffer, buffer, 690);
+			file.write(buffer, 690);
+
+			file.close();
+		}
+
+		parts.insert(parts.begin(), { Part::SAMPLE, new AudioFileSourceSerialFlash("silence.mp3") });
 	}
 
 	LoopManager::addListener(this);
