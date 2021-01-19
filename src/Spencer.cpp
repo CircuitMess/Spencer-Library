@@ -44,3 +44,20 @@ void SpencerImpl::begin()
 
 	LoopManager::setStackSize(10240);
 }
+
+bool SpencerImpl::loadSettings(){
+	bool firstTime = !Settings.begin() || Settings.get().SSID[0] == 0;
+
+	if(firstTime){
+		Settings.reset();
+		Settings.get().brightnessLevel = Settings.get().volumeLevel = 1;
+		Settings.store();
+	}
+
+	uint8_t brightnessLevelValues[3] = {5, 20, 100};
+	float audioLevelValues[3] = {0.1, 0.4, 1.0};
+	LEDmatrix.setBrightness(brightnessLevelValues[Settings.get().brightnessLevel]);
+	Playback.setVolume(audioLevelValues[Settings.get().volumeLevel]);
+
+	return firstTime;
+}

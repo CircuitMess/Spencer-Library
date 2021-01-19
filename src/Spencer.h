@@ -27,7 +27,14 @@ class SpencerImpl
 public:
 	SpencerImpl();
 	~SpencerImpl();
+
 	void begin();
+
+	/**
+	 * Loads Spencer's settings. If no settings are stored, i.e. this is the first time Spencer is started, default values will be set and stored.
+	 * @return True if no settings are stored (if Spencer hasn't been started before)
+	 */
+	bool loadSettings();
 };
 
 extern LEDmatrixImpl LEDmatrix;
