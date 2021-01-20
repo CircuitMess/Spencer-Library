@@ -138,8 +138,10 @@ TTSResult* TextToSpeechImpl::generateSpeech(const char* text, const char* filena
 				state = PRE;
 			}
 		}else if(state == VAL){
-			if((fileSize = processStream(stream, filename)) == 0){
+			if((fileSize = processStream(stream, filename)) < 0){
 				return new TTSResult(TTSError::FILE);
+			}else if(fileSize == 0){
+				return new TTSResult(TTSError::JSON);
 			}
 			processed = true;
 			break;
@@ -161,15 +163,16 @@ TTSResult* TextToSpeechImpl::generateSpeech(const char* text, const char* filena
 	return result;
 }
 
-size_t TextToSpeechImpl::processStream(WiFiClient& stream, const char* filename){
-	if(filename == nullptr){
-		return 0;
+int TextToSpeechImpl::processStream(WiFiClient& stream, const char* filename){
+	if(filename == nullptr) return -1;
+
+	if(!SerialFlash.exists(filename)){
+		SerialFlash.createErasable(filename, 64000);
 	}
-	SerialFlash.createErasable(filename, 64000);
+
 	SerialFlashFile file = SerialFlash.open(filename);
-	if(!(file)){
-		return 0;
-	}
+	if(!file) return -2;
+
 	file.erase();
 
 	FileWriteStream fileStream(file);

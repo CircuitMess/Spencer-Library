@@ -33,7 +33,7 @@ protected:
 
 private:
 	TTSResult* generateSpeech(const char* text, const char* filename = "speech.mp3");
-	size_t processStream(WiFiClient& stream, const char* filename);
+	int processStream(WiFiClient& stream, const char* filename);
 	void readUntilQuote(WiFiClient& stream);
 
 	std::set<const char*> fileStash;
