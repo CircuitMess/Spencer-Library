@@ -1,8 +1,14 @@
 #include <Loop/LoopManager.h>
 #include "PreparedStatement.h"
 #include "Audio/AudioFileSourceSerialFlash.h"
+#include "Audio/silence.hpp"
 
 PreparedStatement::~PreparedStatement(){
+	for(const Part& part : parts){
+		if(part.type != Part::TTS) continue;
+		delete (std::string*) part.content;
+	}
+
 	for(TTSResult* result : TTSresults){
 		if(result == nullptr) continue;
 		TextToSpeech.releaseRecording(result->filename);
@@ -20,7 +26,7 @@ void PreparedStatement::addSample(AudioFileSource* sample){
 
 bool PreparedStatement::addTTS(const char* text){
 	if(text == nullptr) return false;
-	parts.push_back({ Part::TTS, (void*) text });
+	parts.push_back({ Part::TTS, new std::string(text) });
 	return true;
 }
 
@@ -68,7 +74,7 @@ void PreparedStatement::prepare(void (*playCallback)(TTSError error, CompositeAu
 	for(const Part& part : parts){
 		if(part.type == Part::TTS){
 			TTSresults.push_back(nullptr);
-			TextToSpeech.addJob({ static_cast<const char*>(part.content), &TTSresults.back() });
+			TextToSpeech.addJob({ * (std::string*) part.content, &TTSresults.back() });
 		}
 	}
 
@@ -89,7 +95,7 @@ void PreparedStatement::prepare(void (*playCallback)(TTSError error, CompositeAu
 			file = SerialFlash.open("silence.mp3");
 
 			uint8_t buffer[sizeof(silence)];
-			memcpy_P(buffer, buffer, sizeof(silence));
+			memcpy_P(buffer, silence, sizeof(silence));
 			file.write(buffer, sizeof(silence));
 
 			file.close();

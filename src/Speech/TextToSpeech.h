@@ -19,7 +19,7 @@ struct TTSResult {
 };
 
 struct TTSJob {
-	const char* text;
+	std::string text;
 	TTSResult** result;
 };
 class TextToSpeechImpl : public AsyncProcessor<TTSJob> {
@@ -32,7 +32,7 @@ protected:
 	void doJob(const TTSJob& job) override;
 
 private:
-	TTSResult* generateSpeech(const char* text, const char* filename = "speech.mp3");
+	TTSResult* generateSpeech(const std::string& text, const char* filename = "speech.mp3");
 	int processStream(WiFiClient& stream, const char* filename);
 	void readUntilQuote(WiFiClient& stream);
 

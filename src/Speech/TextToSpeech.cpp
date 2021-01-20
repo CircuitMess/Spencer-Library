@@ -35,7 +35,7 @@ void TextToSpeechImpl::releaseRecording(const char* filename){
 }
 
 void TextToSpeechImpl::doJob(const TTSJob& job){
-	if(strlen(job.text) > 130){
+	if(job.text.length() > 130){
 		*job.result = new TTSResult(TTSError::TEXTLIMIT);
 		return;
 	}
@@ -64,7 +64,7 @@ void TextToSpeechImpl::doJob(const TTSJob& job){
 	}
 }
 
-TTSResult* TextToSpeechImpl::generateSpeech(const char* text, const char* filename){
+TTSResult* TextToSpeechImpl::generateSpeech(const std::string& text, const char* filename){
 	const char pattern[] = "{ 'input': { 'text': '%.*s' },"
 						   "'voice': {"
 						   "'languageCode': 'en-US',"
@@ -77,8 +77,8 @@ TTSResult* TextToSpeechImpl::generateSpeech(const char* text, const char* filena
 						   "'sampleRateHertz': 16000"
 						   "}}";
 
-	char* data = (char*) malloc(sizeof(pattern) + (strlen(text) > CHAR_LIMIT ? CHAR_LIMIT : strlen(text)) + 2);
-	uint length = sprintf(data, pattern, CHAR_LIMIT, text);
+	char* data = (char*) malloc(sizeof(pattern) + (text.length() > CHAR_LIMIT ? CHAR_LIMIT : text.length()) + 2);
+	uint length = sprintf(data, pattern, CHAR_LIMIT, text.c_str());
 
 	StreamableHTTPClient http;
 	http.useHTTP10(true);
