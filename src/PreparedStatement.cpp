@@ -74,16 +74,23 @@ void PreparedStatement::prepare(void (*playCallback)(TTSError error, CompositeAu
 
 	TTSresults.shrink_to_fit();
 
+	/**
+	 * Weird bug happening when PreparedStatement consists only of TTS parts: every three used samples, 30kb
+	 * of heap storage will be lost. Acquired by something and never released. Traced it down, and it's 100%
+	 * not a leak in Spencer's library.
+	 *
+	 * The fix is to add a single empty mp3 audio sample.
+	 */
 	if(TTSresults.size() == parts.size()){
 		SerialFlashFile file;
 
 		if(!SerialFlash.exists("silence.mp3")){
-			SerialFlash.create("silence.mp3", 690);
+			SerialFlash.create("silence.mp3", sizeof(silence));
 			file = SerialFlash.open("silence.mp3");
 
-			uint8_t buffer[690];
-			memcpy_P(buffer, buffer, 690);
-			file.write(buffer, 690);
+			uint8_t buffer[sizeof(silence)];
+			memcpy_P(buffer, buffer, sizeof(silence));
+			file.write(buffer, sizeof(silence));
 
 			file.close();
 		}
