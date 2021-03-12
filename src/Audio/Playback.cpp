@@ -63,10 +63,7 @@ void PlaybackImpl::playMP3(AudioFileSource* _file)
 	i2s->begin();
 	delay(50);
 	file = _file;
-	if(!mp3->begin(file, out))
-	{
-		return;
-	}
+	mp3->begin(file, out);
 }
 void PlaybackImpl::playMP3(const char* path)
 {
