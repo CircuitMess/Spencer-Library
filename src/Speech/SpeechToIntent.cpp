@@ -122,7 +122,7 @@ IntentResult* SpeechToIntentImpl::identifyVoice(const char* filename){
 	const char* transcript = json["text"].as<const char*>();
 	uint32_t transcriptLength = strlen(transcript);
 	result->transcript = static_cast<char*>(malloc(transcriptLength + 1));
-	memset(result->transcript, 0, transcriptLength+1);
+	memset(result->transcript + transcriptLength, 0, 1);
 	memcpy(result->transcript, transcript, transcriptLength);
 
 	const char* intent;
@@ -137,7 +137,7 @@ IntentResult* SpeechToIntentImpl::identifyVoice(const char* filename){
 
 	uint32_t intentLength = strlen(intent);
 	result->intent = static_cast<char*>(malloc(intentLength + 1));
-	memset(result->intent, 0, intentLength+1);
+	memset(result->intent + intentLength, 0, 1);
 	memcpy(result->intent, intent, intentLength);
 
 	if(!json.containsKey("entities")) return result;

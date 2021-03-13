@@ -52,11 +52,6 @@ public:
 	 * @param vol Volume, float from 0.0 to 4.0;
 	 */
 	void setVolume(float vol);
-	/**
-	 * Gets playback volume.
-	 * @return Volume, float from 0.0 to 4.0;
-	 */
-	float getVolume();
 	void loop(uint _time) override;
 	bool isRunning();
 
@@ -67,7 +62,6 @@ private:
 	AudioOutputI2S *out;
 	AudioFileSource *file;
 	void(*playbackDoneCallback)();
-	float volume = 0.4;
 
 };
 
