@@ -5,7 +5,8 @@
 #include <SerialFlash.h>
 #include <CircuitOS.h>
 #include <Input/InputGPIO.h>
-#include <Devices/LEDmatrix/LEDmatrix.h>
+#include <Devices/Matrix/IS31FL3731.h>
+#include <Devices/Matrix/Matrix.h>
 #include <Devices/SerialFlash/SerialFlashFileAdapter.h>
 #include <WiFi.h>
 #include <Network/Net.h>
@@ -24,6 +25,8 @@
 #define FLASH_CS_PIN 5
 #define BTN_PIN 17
 #define LED_PIN 26
+#define I2C_SDA 22
+#define I2C_SCL 21
 
 class SpencerImpl
 {
@@ -40,6 +43,6 @@ public:
 	bool loadSettings();
 };
 
-extern LEDmatrixImpl LEDmatrix;
+extern Matrix LEDmatrix;
 extern SpencerImpl Spencer;
 #endif
