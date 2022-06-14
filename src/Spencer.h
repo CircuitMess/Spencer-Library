@@ -8,6 +8,7 @@
 #include <Devices/Matrix/IS31FL3731.h>
 #include <Devices/Matrix/Matrix.h>
 #include <Devices/SerialFlash/SerialFlashFileAdapter.h>
+#include <Devices/Matrix/MatrixAnimGIF.h>
 #include <WiFi.h>
 #include <Network/Net.h>
 #include <Util/Task.h>
