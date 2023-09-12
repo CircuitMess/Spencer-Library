@@ -5,9 +5,8 @@
 #include <SerialFlash.h>
 #include <CircuitOS.h>
 #include <Input/InputGPIO.h>
-#include <Devices/LEDmatrix/LEDmatrix.h>
+#include "LEDmatrix/LEDmatrix.h"
 #include <Devices/SerialFlash/SerialFlashFileAdapter.h>
-#include <Devices/Matrix/MatrixAnimGIF.h>
 #include <WiFi.h>
 #include <Network/Net.h>
 #include <Util/Task.h>
