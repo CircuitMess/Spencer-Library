@@ -20,7 +20,7 @@ void PlaybackImpl::begin(I2S* i2s)
 	out->SetPinout(16, 27, 4);
 	out->SetChannels(1);
 	out->SetOutputModeMono(1);
-	out->SetGain(volume);
+	out->SetGain(0.4);
 }
 void PlaybackImpl::loop(uint _time)
 {
@@ -63,10 +63,7 @@ void PlaybackImpl::playMP3(AudioFileSource* _file)
 	i2s->begin();
 	delay(50);
 	file = _file;
-	if(!mp3->begin(file, out))
-	{
-		return;
-	}
+	mp3->begin(file, out);
 }
 void PlaybackImpl::playMP3(const char* path)
 {
@@ -108,12 +105,7 @@ void PlaybackImpl::setPlaybackDoneCallback(void (*callback)())
 	if(callback == nullptr || !isRunning()) return;
 	playbackDoneCallback = callback;
 }
-void PlaybackImpl::setVolume(float vol)
+void PlaybackImpl::setVolume(float volume)
 {
-	volume = vol;
 	out->SetGain(volume);
-}
-float PlaybackImpl::getVolume()
-{
-	return volume;
 }
